@@ -1,3 +1,41 @@
 logs/
 target/
 .vscode/
+.idea/
+*.iml
+
+# Database
+data/
+*.h2.db
+*.trace.db
+
+# IDE
+*.class
+*.classpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+
+# Maven
+*.jar
+*.war
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+.temp/
+
+# Environment
+.env
+.env.local
