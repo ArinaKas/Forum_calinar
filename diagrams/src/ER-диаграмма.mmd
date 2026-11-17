@@ -1,0 +1,169 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#F8FAFC"
+    primaryBorderColor: "#64748B"
+    primaryTextColor: "#1F2937"
+    lineColor: "#64748B"
+    fontSize: "14px"
+---
+erDiagram
+    %% ==================== ПОЛЬЗОВАТЕЛИ И ДОСТУП ====================
+    roles["roles · роли доступа"] {
+        int role_id PK
+        varchar name UK "админ | модератор | пользователь"
+    }
+
+    ranks["ranks · звания"] {
+        int rank_id PK
+        varchar name "Звание 1 … Звание 5"
+        int min_points "порог баллов для звания"
+    }
+
+    users["users · пользователи"] {
+        bigint user_id PK
+        varchar email UK
+        varchar password_hash
+        varchar nickname UK
+        int role_id FK
+        int rank_id FK
+        int points "текущий баланс баллов"
+        timestamp created_at
+    }
+
+    %% ==================== СПРАВОЧНИКИ КОНТЕНТА ====================
+    works["works · произведения"] {
+        int work_id PK
+        varchar title
+        varchar type "фильм | мультфильм | игра"
+    }
+
+    characters["characters · персонажи"] {
+        int character_id PK
+        int work_id FK
+        varchar name
+    }
+
+    dish_categories["dish_categories · категории блюд"] {
+        int category_id PK
+        varchar name
+    }
+
+    %% ==================== РЕЦЕПТЫ ====================
+    recipes["recipes · рецепты"] {
+        bigint recipe_id PK
+        bigint author_id FK
+        int work_id FK
+        int character_id FK "необязательный"
+        int category_id FK
+        varchar title
+        int base_servings "базовое число порций"
+        varchar status "значения — см. диаграмму состояний"
+        decimal avg_rating "средняя оценка 1–5"
+        varchar photo_url
+        timestamp created_at
+        timestamp published_at "NULL до публикации"
+    }
+
+    ingredients["ingredients · ингредиенты"] {
+        bigint ingredient_id PK
+        bigint recipe_id FK
+        varchar name
+        decimal amount
+        varchar unit "г | мл | шт | по вкусу"
+        boolean is_scalable "пересчитывается при смене порций"
+    }
+
+    recipe_steps["recipe_steps · шаги приготовления"] {
+        bigint step_id PK
+        bigint recipe_id FK
+        int step_no
+        text description
+    }
+
+    %% ==================== СОЦИАЛЬНЫЙ СЛОЙ ====================
+    comments["comments · комментарии"] {
+        bigint comment_id PK
+        bigint recipe_id FK
+        bigint author_id FK
+        text text
+        boolean is_hidden "скрывает модератор по жалобе"
+        timestamp created_at
+    }
+
+    ratings["ratings · оценки"] {
+        bigint rating_id PK
+        bigint recipe_id FK
+        bigint user_id FK "UNIQUE (recipe_id, user_id)"
+        smallint stars "1–5"
+        timestamp created_at
+    }
+
+    favorites["favorites · избранное"] {
+        bigint user_id PK "составной PK, одновременно FK"
+        bigint recipe_id PK "составной PK, одновременно FK"
+        timestamp added_at
+    }
+
+    %% ==================== МОДЕРАЦИЯ ====================
+    complaints["complaints · жалобы"] {
+        bigint complaint_id PK
+        bigint reporter_id FK
+        bigint recipe_id FK "необязательный"
+        bigint comment_id FK "необязательный"
+        text reason
+        varchar status "новая | принята | отклонена"
+        bigint moderator_id FK "необязательный"
+        timestamp created_at
+    }
+
+    moderation_decisions["moderation_decisions · решения модерации"] {
+        bigint decision_id PK
+        bigint recipe_id FK
+        bigint moderator_id FK
+        varchar verdict "ОДОБРЕН | ОТКЛОНЕН"
+        text rejection_reason "причина при отклонении"
+        timestamp created_at
+    }
+
+    %% ==================== МОТИВАЦИЯ И УВЕДОМЛЕНИЯ ====================
+    points_log["points_log · журнал баллов"] {
+        bigint log_id PK
+        bigint user_id FK
+        varchar action "публикация | комментарий | оценка"
+        int points
+        timestamp created_at
+    }
+
+    notifications["notifications · уведомления"] {
+        bigint notification_id PK
+        bigint user_id FK
+        varchar text
+        boolean is_read
+        timestamp created_at
+    }
+
+    %% ==================== СВЯЗИ ====================
+    roles ||--o{ users : "носит роль"
+    ranks ||--o{ users : "звание по баллам"
+    users ||--o{ recipes : "создаёт"
+    works ||--o{ recipes : "мир произведения"
+    characters |o--o{ recipes : "по персонажу"
+    dish_categories ||--o{ recipes : "категория блюда"
+    recipes ||--|{ ingredients : "включает"
+    recipes ||--|{ recipe_steps : "содержит шаги"
+    users ||--o{ comments : "пишет"
+    recipes ||--o{ comments : "обсуждается"
+    users ||--o{ ratings : "ставит"
+    recipes ||--o{ ratings : "получает"
+    users ||--o{ favorites : "добавляет"
+    recipes ||--o{ favorites : "попадает"
+    users ||--o{ complaints : "подаёт"
+    users |o--o{ complaints : "рассматривает"
+    recipes |o--o{ complaints : "объект жалобы"
+    comments |o--o{ complaints : "объект жалобы"
+    users ||--o{ moderation_decisions : "принимает"
+    recipes ||--o{ moderation_decisions : "модерируется"
+    users ||--o{ points_log : "начисления"
+    users ||--o{ notifications : "получает"

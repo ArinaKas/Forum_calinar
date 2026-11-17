@@ -1,0 +1,44 @@
+@startuml
+' Диаграмма состояний: жизненный цикл рецепта (recipes.status)
+
+skinparam shadowing false
+skinparam nodesep 55
+skinparam ranksep 70
+
+skinparam defaultFontColor #1F2937
+skinparam defaultFontSize 13
+skinparam stateBorderColor #64748B
+skinparam ArrowColor #64748B
+skinparam ArrowFontColor #475569
+skinparam ArrowFontSize 11
+
+state "Черновик" as Draft #F1F5F9
+state "На модерации" as InMod #FEF3C7
+state "На доработке" as Rev #DBEAFE
+state "Отклонён" as Rej #FEE2E2
+state "Опубликован" as Pub #D1FAE5
+state "Скрыт (по жалобе)" as Hidden #E5E7EB
+
+[*] --> Draft : автор:\n«Добавить рецепт»\n/ создан черновик
+
+Draft --> InMod : «Отправить на модерацию»\n[автопроверка пройдена:\nполя заполнены, дубликатов нет,\nфото корректно]
+Draft --> Rev : «Отправить на модерацию»\n[автопроверка не пройдена]\n/ автору указана причина
+
+InMod --> Pub : решение модератора «Одобрить»\n/ публикация в ленте
+InMod --> Rej : решение модератора «Отклонить»\n/ уведомление с причиной
+
+Rej --> Rev : автор открыл рецепт\nна доработку
+
+Rev --> InMod : повторная отправка\n[автопроверка пройдена]
+Rev --> Rev : повторная отправка\n[автопроверка не пройдена]
+
+Pub --> InMod : автор отредактировал\nопубликованный рецепт
+Pub --> Hidden : жалоба на рецепт\nпризнана обоснованной\n(решение модератора)
+
+Hidden --> [*]
+
+InMod : entry / рецепт в очереди\nмодерации
+Pub : entry / уведомление автору,\nначисление баллов
+Rej : entry / уведомление автору\nс причиной отклонения
+
+@enduml

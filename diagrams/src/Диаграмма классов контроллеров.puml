@@ -1,0 +1,75 @@
+@startuml
+' Диаграмма классов ИС «Кулинарный форум» — контроллеры REST API
+
+hide circle
+skinparam shadowing false
+skinparam nodesep 70
+skinparam ranksep 110
+
+skinparam defaultFontColor #1F2937
+skinparam defaultFontSize 12
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #64748B
+skinparam ArrowColor #64748B
+skinparam ArrowFontColor #475569
+skinparam ArrowFontSize 11
+
+left to right direction
+
+class AuthController {
+  +register(dto: RegisterDto) : User
+  +login(dto: LoginDto) : string
+  +logout() : void
+}
+
+class RecipeController {
+  +createDraft() : Recipe
+  +edit(recipeId: long) : Recipe
+  +submitToModeration(recipeId: long) : void
+  +getCard(recipeId: long) : RecipeCardDto
+  +recalcPortions(recipeId: long, servings: int) : List<Ingredient>
+  +addFavorite(recipeId: long) : void
+  +removeFavorite(recipeId: long) : void
+}
+
+class FeedController {
+  +getFeed(page: int) : List<RecipeCardDto>
+  +filter(f: RecipeFilter) : List<RecipeCardDto>
+}
+
+class CommentController {
+  +addComment(recipeId: long, text: string) : Comment
+  +rate(recipeId: long, stars: int) : void
+  +complain(dto: ComplaintDto) : void
+}
+
+class ProfileController {
+  +getProfile(userId: long) : ProfileDto
+  +getFavorites(userId: long) : List<RecipeCardDto>
+}
+
+class ModerationController {
+  +getQueue() : List<Recipe>
+  +approve(recipeId: long) : void
+  +reject(recipeId: long, reason: string) : void
+  +processComplaint(complaintId: long, verdict: string) : void
+}
+
+class AdminController {
+  +saveWork(w: Work) : void
+  +saveCharacter(c: Character) : void
+  +saveCategory(c: DishCategory) : void
+  +assignRole(userId: long, r: Role) : void
+  +savePointsRules(r: PointsRules) : void
+}
+
+' ===== Связи между контроллерами =====
+AuthController --> ProfileController : регистрирует\nпользователей
+AdminController --> RecipeController : ведёт справочники\nпроизведений и категорий
+ProfileController --> RecipeController : избранное\nи рецепты автора
+CommentController --> RecipeController : комментарии\nи оценки
+CommentController --> ModerationController : жалобы\nна контент
+RecipeController --> FeedController : публикация\nв ленту
+RecipeController --> ModerationController : отправка\nна модерацию
+ModerationController --> RecipeController : одобряет /\nотклоняет
+@enduml
